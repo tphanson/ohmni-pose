@@ -1,4 +1,3 @@
-import numpy as np
 import cv2 as cv
 from PIL import ImageDraw
 
@@ -34,10 +33,9 @@ class Test():
             img = stream.get()
             cv_img = cv.resize(img, self.pose.input_shape)
             pil_img = image.convert_cv_to_pil(cv_img)
-            activated, obj_img, bbox, objects, inference_time = self.pose.predict(
-                cv_img)
+            objects, time, status, obj_img, bbox = self.pose.predict(cv_img)
 
-            print('Inference time: {:.4f}'.format(inference_time/1000))
+            print('Inference time: {:.4f}'.format(time/1000))
             drawed_img = ImageDraw.Draw(pil_img)
             for marks in objects:
                 for mark in marks:
@@ -52,8 +50,8 @@ class Test():
             print('FPS: {:.1f}'.format(fps))
             print('\n')
 
-            if activated:
-                self.draw_text(drawed_img, 'Activated')
+            if status != 0:
+                self.draw_text(drawed_img, 'Activated - Status: '+str(status))
                 cv.imshow('Activation', obj_img)
                 cv.moveWindow('Activation', 90, 650)
             else:

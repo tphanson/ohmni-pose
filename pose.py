@@ -72,13 +72,17 @@ class Pose():
             return False
 
     def activate(self, marks):
-        activated = False
-        activated = self.activate_by_left_hand(
-            marks) or self.activate_by_right_hand(marks)
-        bbox = (0, 0, 0, 0)
-        if activated:
+        if self.activate_by_left_hand(marks) and self.activate_by_right_hand(marks):
             bbox = self.generate_bbox(marks)
-        return activated, bbox
+            return 2, bbox
+        elif self.activate_by_left_hand(marks):
+            bbox = self.generate_bbox(marks)
+            return 1, bbox
+        elif self.activate_by_right_hand(marks):
+            bbox = self.generate_bbox(marks)
+            return 1, bbox
+        else:
+            return 0, (0, 0, 0, 0)
 
     def inference(self, img):
         if img.shape[0] != self.input_shape[1] or img.shape[1] != self.input_shape[0]:
@@ -102,14 +106,14 @@ class Pose():
     def predict(self, img):
         objects, inference_time = self.inference(img)
 
-        activated = False
+        status = 0
         obj_img = None
         bbox = None
         for marks in objects:
             # Find an activation
-            activated, bbox = self.activate(marks)
+            status, bbox = self.activate(marks)
             (xmin, xmax, ymin, ymax) = bbox
-            if activated:
+            if status != 0:
                 obj_img = img[ymin:ymax, xmin:xmax]
                 obj_img = cv.resize(obj_img, (96, 96))
-        return activated, obj_img, bbox, objects, inference_time
+        return objects, inference_time, status, obj_img, bbox
